@@ -57,14 +57,10 @@ Now, you just need to make your resources cacheable, so unless you've already ta
 * the HTTP specification related to HTTP caching - http://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html
 * Things Caches Do - http://tomayko.com/writings/things-caches-do
 
-
-= Supported libraries
-
-* rest-client > 1.2.0
-
 = Dependencies
 
-* rack-cache >= 0.5
+* rest-client >= 1.2.0
+* rack >= 1.0.1
 
 = COPYRIGHT
 

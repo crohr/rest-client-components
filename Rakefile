@@ -10,7 +10,7 @@ begin
     s.description = "RestClient on steroids ! Easily add one or more Rack middleware around RestClient to add functionalities such as transparent caching (Rack::Cache), transparent logging, etc."
     s.authors = ["Cyril Rohr"]
     s.add_dependency "rest-client", ">= 1.2.0"
-    s.add_dependency "rack", ">= 1.0.0"
+    s.add_dependency "rack", ">= 1.0.1"
   end
 rescue LoadError
   puts "Jeweler not available. Install it with: sudo gem install technicalpickles-jeweler -s http://gems.github.com"
