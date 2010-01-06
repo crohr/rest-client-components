@@ -23,6 +23,7 @@ Gem::Specification.new do |s|
      "VERSION",
      "examples/grid5000.rb",
      "lib/restclient/components.rb",
+     "rest-client-components.gemspec",
      "spec/components_spec.rb",
      "spec/spec_helper.rb"
   ]
