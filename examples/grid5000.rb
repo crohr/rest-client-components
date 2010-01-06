@@ -1,12 +1,11 @@
 # In this example, https://localhost:3443/sid/grid5000/sites/grenoble/jobs is a resource having an Expires header, that makes it cacheable.
 # Note how POSTing a payload to this resource automatically invalidates the previous cached entry.
-require File.dirname(__FILE__) + '/../lib/cacheability/restclient'
+require File.dirname(__FILE__) + '/../lib/restclient/components'
+require 'rack/cache'
 require 'json'
 require 'zlib'
-require 'logger'
 RestClient.log = 'stdout'
 RestClient.enable Rack::Cache, :allow_reload => true, :allow_revalidate => true
-RestClient.enable Rack::CommonLogger, STDOUT
 
 api = RestClient::Resource.new('https://localhost:3443')
 def get_jobs(api, headers={})
