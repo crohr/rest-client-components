@@ -11,8 +11,20 @@ Want to log the requests in the commonlog format ?
   require 'restclient/components'
   RestClient.enable Rack::CommonLogger, STDOUT
 
+Want to enable both ?
+  require 'restclient/components'
+  require 'rack/cache'
+  RestClient.enable Rack::CommonLogger, STDOUT
+  RestClient.enable Rack::Cache
+  
 This works with any Rack middleware, thus you can reuse the wide range of existing Rack middleware to add functionalities to RestClient with very little effort.
 The order in which you enable components will be respected.
+
+Note that the rest-client behaviour is also respected: you'll get back a RestClient::Response or RestClient exceptions as a result of your requests. If you prefer a more rackesque approach, just disable the Compatibility component, and you will get back a response conform to the Rack SPEC:
+  require 'restclient/components'
+  RestClient.disable RestClient::Rack::Compatibility
+  status, header, body = RestClient.get('http://some/url')
+In that case, you will only get exceptions for connection or timeout errors (RestClient::ServerBrokeConnection or RestClient::RequestTimeout)
 
 = Installation
 
