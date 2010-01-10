@@ -1,5 +1,5 @@
 # In this example, https://localhost:3443/sid/grid5000/sites/grenoble/jobs is a resource having an Expires header, that makes it cacheable.
-# Note how POSTing a payload to this resource automatically invalidates the previous cached entry.
+# Note how POSTing a payload to this resource automatically invalidates the previously cached entry.
 require File.dirname(__FILE__) + '/../lib/restclient/components'
 require 'rack/cache'
 require 'json'
