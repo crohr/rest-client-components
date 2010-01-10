@@ -10,7 +10,9 @@ module Rack
     
     def call(env)
       status, header, body = @app.call env
-      parsed_body = ::JSON.parse body.join if header['Content-Type'] =~ /^application\/.*json/i
+      content = ""
+      body.each{|line| content << line}
+      parsed_body = ::JSON.parse content if header['Content-Type'] =~ /^application\/.*json/i
       [status, header, parsed_body]
     end
   end

@@ -14,7 +14,9 @@ module RestClient
           raise e
         else
           response = RestClient::MockNetHTTPResponse.new(body, status, header)
-          RestClient::Response.new(response.body.join, response)
+          content = ""
+          response.body.each{|line| content << line}
+          RestClient::Response.new(content, response)
         end
       end
     end
@@ -136,17 +138,26 @@ module RestClient
   
   RACK_APP = Proc.new { |env|
     begin
-      # get the original request and execute it
-      response = env['restclient.request'].original_execute
-      # to satisfy Rack::Lint
-      response.headers.delete(:status)
-      [response.code, RestClient.debeautify_headers( response.headers ), [response.to_s]]
+      # get the original request, replace headers with those of env, and execute it
+      request = env['restclient.request']
+      additional_headers = env.keys.select{|k| k=~/^HTTP_/}.inject({}){|accu, k|
+        accu[k.gsub("HTTP_", "")] = env[k]
+        accu
+      }
+      request.processed_headers.replace(request.make_headers(additional_headers))
+      response = request.original_execute
     rescue RestClient::ExceptionWithResponse => e  
       env['restclient.error'] = e
        # e is a Net::HTTPResponse
       response = RestClient::Response.new(e.response.body, e.response)
-      [response.code, RestClient.debeautify_headers( response.headers ), [response.to_s]]
     end
+    # to satisfy Rack::Lint
+    response.headers.delete(:status)
+    header = RestClient.debeautify_headers( response.headers )
+    body = response.to_s
+    # return the real content-length since RestClient does not do it when decoding gzip responses
+    header['Content-Length'] = body.length.to_s if header.has_key?('Content-Length')
+    [response.code, header, [body]]
   }
 
 end

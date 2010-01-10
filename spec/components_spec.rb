@@ -37,7 +37,6 @@ describe "Components for RestClient" do
   
   describe "usage" do
     before do
-
       @expected_args = {:url=>"http://domain.tld:8888/some/cacheable/resource?q1=a&q2=b", :method=>:get, :headers=>{:additional_header=>"whatever"}}
       @expected_request = RestClient::Request.new(@expected_args)
     end
@@ -57,6 +56,47 @@ describe "Components for RestClient" do
         content = ""
         body.each{|part| content << part}
         content.should == "body"
+      end
+      
+      it "should cif the requested resource is not in the cache" do
+        @expected_request.should_receive(:original_execute).and_return(
+          mock('rest-client response', 
+            :headers => {:content_type => "text/plain, */*", :date => "Mon, 04 Jan 2010 13:37:18 GMT"}, 
+            :code => 200, 
+            :to_s => 'body'))
+        status, header, body = Rack::Lint.new(Rack::CommonLogger.new(Rack::Cache.new(RestClient::RACK_APP))).call(@env.merge(
+          'restclient.request' => @expected_request
+        ))
+        status.should == 200
+        header.should == {"Content-Type"=>"text/plain, */*", "X-Rack-Cache"=>"miss", "Date"=>"Mon, 04 Jan 2010 13:37:18 GMT"}
+        content = ""
+        body.each{|part| content << part}
+        content.should == "body"
+      end
+
+      
+      it "should add HTTP headers set by Rack middleware to the list of request headers" do
+        module Rack
+          class AddRequestHeader
+            def initialize(app)
+              @app = app
+            end
+            def call(env)
+              env['HTTP_X_HEADER'] = "hello"
+              @app.call(env)
+            end
+          end
+        end
+        @expected_request.should_receive(:processed_headers).and_return(processed_headers=mock("hash processed headers"))
+        processed_headers.should_receive(:replace).with(hash_including("X-header" => "hello"))
+        @expected_request.should_receive(:original_execute).and_return(
+          mock('rest-client response', 
+            :headers => {:content_type => "text/plain, */*", :date => "Mon, 04 Jan 2010 13:37:18 GMT"}, 
+            :code => 200, 
+            :to_s => 'body'))
+        status, header, body = Rack::Lint.new(Rack::AddRequestHeader.new(RestClient::RACK_APP)).call(@env.merge(
+          'restclient.request' => @expected_request
+        ))
       end
 
       it "should return a 304 not modified response if the call to the backend returned a 304 not modified response" do
