@@ -53,7 +53,7 @@ describe "Components for RestClient" do
           'restclient.request' => @expected_request
         ))
         status.should == 200
-        header.should == {"content-type"=>"text/plain, */*", "X-Rack-Cache"=>"miss", "date"=>"Mon, 04 Jan 2010 13:37:18 GMT"}
+        header.should == {"Content-Type"=>"text/plain, */*", "X-Rack-Cache"=>"miss", "Date"=>"Mon, 04 Jan 2010 13:37:18 GMT"}
         content = ""
         body.each{|part| content << part}
         content.should == "body"
@@ -65,7 +65,7 @@ describe "Components for RestClient" do
           'restclient.request' => @expected_request
         ))
         status.should == 304
-        header.should == {"X-Rack-Cache"=>"miss", "date"=>"Mon, 04 Jan 2010 13:42:43 GMT", "header1"=>"value1"} # restclient only returns the first member of each header
+        header.should == {"X-Rack-Cache"=>"miss", "Date"=>"Mon, 04 Jan 2010 13:42:43 GMT", "Header1"=>"value1"} # restclient only returns the first member of each header
         content = ""
         body.each{|part| content<<part}
         content.should == "body"

@@ -65,7 +65,7 @@ module RestClient
   
   def self.debeautify_headers(headers = {})   # :nodoc:
     headers.inject({}) do |out, (key, value)|
-			out[key.to_s.gsub(/_/, '-').downcase] = value.to_s
+			out[key.to_s.gsub(/_/, '-').split("-").map{|w| w.capitalize}.join("-")] = value.to_s
 			out
 		end
   end
@@ -128,7 +128,7 @@ module RestClient
     def to_hash
       @header.inject({}) {|out, (key, value)|
         # In Net::HTTP, header values are arrays
-        out[key.downcase] = [value]
+        out[key] = [value]
         out
       }
     end    
