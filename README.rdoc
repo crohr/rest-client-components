@@ -6,16 +6,19 @@ Want to add transparent HTTP caching to the rest-client[http://github.com/archil
   require 'restclient/components'
   require 'rack/cache'
   RestClient.enable Rack::Cache
+  RestClient.get "http://some/cacheable/resource"
 
 Want to log the requests in the commonlog format ?
   require 'restclient/components'
   RestClient.enable Rack::CommonLogger, STDOUT
+  RestClient.get "http://some/resource"
 
 Want to enable both ?
   require 'restclient/components'
   require 'rack/cache'
   RestClient.enable Rack::CommonLogger, STDOUT
   RestClient.enable Rack::Cache
+  RestClient.get "http://some/cacheable/resource"
   
 This works with any Rack middleware, thus you can reuse the wide range of existing Rack middleware to add functionalities to RestClient with very little effort.
 The order in which you enable components will be respected.
@@ -25,6 +28,8 @@ Note that the rest-client behaviour is also respected: you'll get back a RestCli
   RestClient.disable RestClient::Rack::Compatibility
   status, header, body = RestClient.get('http://some/url')
 In that case, you will only get exceptions for connection or timeout errors (RestClient::ServerBrokeConnection or RestClient::RequestTimeout)
+
+See the examples folder for more details.
 
 = Installation
 
