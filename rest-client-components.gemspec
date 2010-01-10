@@ -5,7 +5,7 @@
 
 Gem::Specification.new do |s|
   s.name = %q{rest-client-components}
-  s.version = "0.2.1"
+  s.version = "0.2.2"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Cyril Rohr"]
@@ -37,7 +37,8 @@ Gem::Specification.new do |s|
     "spec/components_spec.rb",
      "spec/spec_helper.rb",
      "examples/caching.rb",
-     "examples/parsing.rb"
+     "examples/parsing.rb",
+     "examples/twitter_caching.rb"
   ]
 
   if s.respond_to? :specification_version then
