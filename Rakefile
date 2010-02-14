@@ -11,6 +11,7 @@ begin
     s.authors = ["Cyril Rohr"]
     s.add_dependency "rest-client", ">= 1.2.0"
     s.add_dependency "rack", ">= 1.0.1"
+    s.add_development_dependency "webmock"
   end
 rescue LoadError
   puts "Jeweler not available. Install it with: sudo gem install technicalpickles-jeweler -s http://gems.github.com"

@@ -10,13 +10,17 @@ module RestClient
       
       def call(env)
         status, header, body = @app.call(env)
-        if e = env['restclient.error']
+        net_http_response = RestClient::MockNetHTTPResponse.new(body, status, header)
+        content = ""
+        net_http_response.body.each{|line| content << line}
+        response = RestClient::Response.new(content, net_http_response)
+        if block = env['restclient.hash'][:block]
+          block.call(response)
+        # only raise error if response is not successful
+        elsif !(200...300).include?(response.code) && e = env['restclient.hash'][:error]
           raise e
         else
-          response = RestClient::MockNetHTTPResponse.new(body, status, header)
-          content = ""
-          response.body.each{|line| content << line}
-          RestClient::Response.new(content, response)
+          response
         end
       end
     end
@@ -42,7 +46,11 @@ module RestClient
   def self.enable(component, *args)
     # remove any existing component of the same class
     disable(component)
-    @components.unshift [component, args]
+    if component == RestClient::Rack::Compatibility
+      @components.push [component, args]
+    else
+      @components.unshift [component, args]
+    end
   end
   
   # Disable a component
@@ -78,14 +86,19 @@ module RestClient
   # 
 	class Request
 	  alias_method :original_execute, :execute
-	  def execute
+	  def execute(&block)
       uri = URI.parse(@url)
-      uri_path_split = uri.path.split("/")
-      path_info = (last_part = uri_path_split.pop) ? "/"+last_part : ""
-      script_name = uri_path_split.join("/")
+  	  if uri.path
+        uri_path_split = uri.path.split("/")
+        path_info = (last_part = uri_path_split.pop) ? "/"+last_part : ""
+        script_name = uri_path_split.join("/")
+      else
+        path_info = ""
+        script_name = ""
+      end
       # minimal rack spec
       env = { 
-        "restclient.request" => self,
+        "restclient.hash" => {:request => self, :error => nil, :block => block},
         "REQUEST_METHOD" => @method.to_s.upcase,
         "SCRIPT_NAME" => script_name,
         "PATH_INFO" => path_info,
@@ -97,12 +110,13 @@ module RestClient
         "rack.multithread" => true,
         "rack.multiprocess" => true,
         "rack.url_scheme" => uri.scheme,
-        "rack.input" => StringIO.new,
-        "rack.errors" => $stderr   # Rack-Cache writes errors into this field
+        "rack.input" => payload || StringIO.new,
+        "rack.errors" => $stderr
       }
       @processed_headers.each do |key, value|
         env.merge!("HTTP_"+key.to_s.gsub("-", "_").upcase => value)
       end
+      env.delete('HTTP_CONTENT_TYPE'); env.delete('HTTP_CONTENT_LENGTH')
       stack = RestClient::RACK_APP
       RestClient.components.each do |(component, args)|
         if (args || []).empty?
@@ -111,10 +125,33 @@ module RestClient
           stack = component.new(stack, *args)
         end
       end
-      stack.call(env)
+      response = stack.call(env)
+      # allow to use the response block, even if not using the Compatibility component
+      unless RestClient.enabled?(RestClient::Rack::Compatibility)
+        if block = env['restclient.hash'][:block]
+          block.call(response)
+        end
+      end
+      response
     end
   end
 	
+	module Payload
+	  class Base
+	    def rewind(*args)
+	      @stream.rewind(*args)
+      end
+      
+      def gets(*args)
+        @stream.gets(*args)
+      end
+      
+      def each(&block)
+        @stream.each(&block)
+      end
+    end
+  end
+  
   # A class that mocks the behaviour of a Net::HTTPResponse class.
   # It is required since RestClient::Response must be initialized with a class that responds to :code and :to_hash.
   class MockNetHTTPResponse
@@ -139,15 +176,20 @@ module RestClient
   RACK_APP = Proc.new { |env|
     begin
       # get the original request, replace headers with those of env, and execute it
-      request = env['restclient.request']
-      additional_headers = env.keys.select{|k| k=~/^HTTP_/}.inject({}){|accu, k|
+      request = env['restclient.hash'][:request]
+      additional_headers = (env.keys.select{|k| k=~/^HTTP_/}).inject({}){|accu, k|
         accu[k.gsub("HTTP_", "")] = env[k]
         accu
       }
-      request.processed_headers.replace(request.make_headers(additional_headers))
+      # hack, should probably avoid to call #read on rack.input..
+      request.instance_variable_set "@payload", Payload.generate(env['rack.input'].read)
+      headers = request.make_headers(additional_headers)
+      headers.delete('Content-Type')
+      headers['Content-type'] = env['CONTENT_TYPE'] if env['CONTENT_TYPE']
+      request.processed_headers.update(headers)
       response = request.original_execute
     rescue RestClient::ExceptionWithResponse => e  
-      env['restclient.error'] = e
+      env['restclient.hash'][:error] = e
        # e is a Net::HTTPResponse
       response = RestClient::Response.new(e.response.body, e.response)
     end
