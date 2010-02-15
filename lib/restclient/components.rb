@@ -88,20 +88,12 @@ module RestClient
 	  alias_method :original_execute, :execute
 	  def execute(&block)
       uri = URI.parse(@url)
-  	  if uri.path
-        uri_path_split = uri.path.split("/")
-        path_info = (last_part = uri_path_split.pop) ? "/"+last_part : ""
-        script_name = uri_path_split.join("/")
-      else
-        path_info = ""
-        script_name = ""
-      end
       # minimal rack spec
       env = { 
         "restclient.hash" => {:request => self, :error => nil, :block => block},
         "REQUEST_METHOD" => @method.to_s.upcase,
-        "SCRIPT_NAME" => script_name,
-        "PATH_INFO" => path_info,
+        "SCRIPT_NAME" => "",
+        "PATH_INFO" => uri.path || "/",
         "QUERY_STRING" => uri.query || "",
         "SERVER_NAME" => uri.host,
         "SERVER_PORT" => uri.port.to_s,
@@ -182,7 +174,13 @@ module RestClient
         accu
       }
       # hack, should probably avoid to call #read on rack.input..
-      request.instance_variable_set "@payload", Payload.generate(env['rack.input'].read)
+      payload = if (env['rack.input'].size > 0)
+        env['rack.input'].rewind
+        Payload.generate(env['rack.input'].read)
+      else
+        nil
+      end
+      request.instance_variable_set "@payload", payload
       headers = request.make_headers(additional_headers)
       headers.delete('Content-Type')
       headers['Content-type'] = env['CONTENT_TYPE'] if env['CONTENT_TYPE']

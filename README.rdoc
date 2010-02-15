@@ -23,7 +23,7 @@ Want to enable both ?
 This works with any Rack middleware, thus you can reuse the wide range of existing Rack middleware to add functionalities to RestClient with very little effort.
 The order in which you enable components will be respected.
 
-Note that the rest-client behaviour is also respected: you'll get back a RestClient::Response or RestClient exceptions as a result of your requests. If you prefer a more rackesque approach, just disable the Compatibility component, and you will get back a response conform to the Rack SPEC:
+Note that the rest-client behaviour is also respected: you'll get back a RestClient::Response or RestClient exceptions as a result of your requests. If you prefer a more rack-esque approach, just disable the Compatibility component, and you will get back a response conform to the Rack SPEC:
   require 'restclient/components'
   RestClient.disable RestClient::Rack::Compatibility
   status, header, body = RestClient.get('http://some/url')
@@ -76,9 +76,9 @@ Now, you just need to make your resources cacheable, so unless you've already ta
 
 = Dependencies
 
-* rest-client >= 1.2.0
+* rest-client >= 1.3.1
 * rack >= 1.0.1
 
 = COPYRIGHT
 
-Copyright (c) 2009 Cyril Rohr. See LICENSE for details.
+Copyright (c) 2009-2010 Cyril Rohr. See LICENSE for details.
