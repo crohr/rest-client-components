@@ -188,8 +188,7 @@ module RestClient
       response = request.original_execute
     rescue RestClient::ExceptionWithResponse => e  
       env['restclient.hash'][:error] = e
-       # e is a Net::HTTPResponse
-      response = RestClient::Response.new(e.response.body, e.response)
+      response = e.response
     end
     # to satisfy Rack::Lint
     response.headers.delete(:status)

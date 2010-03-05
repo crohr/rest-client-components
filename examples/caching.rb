@@ -83,8 +83,6 @@ cache: [GET /cacheable/resource] fresh
 cache: [GET /cacheable/resource] fresh
 - - - [15/Feb/2010 22:37:30] "GET /cacheable/resource " 200 5 0.0019
 [200, "\"aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d\"", "Mon, 15 Feb 2010 21:37:24 GMT", "hello"]
-[warning] The response contained in an RestClient::Exception is now a RestClient::Response instead of a Net::HTTPResponse, please update your code
-[warning] The response contained in an RestClient::Exception is now a RestClient::Response instead of a Net::HTTPResponse, please update your code
 cache: [GET /cacheable/resource] stale, valid, store
 - - - [15/Feb/2010 22:37:31] "GET /cacheable/resource " 200 5 0.0074
 [200, "\"aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d\"", "Mon, 15 Feb 2010 21:37:24 GMT", "hello"]
