@@ -36,7 +36,10 @@ Gem::Specification.new do |s|
   s.summary = %q{RestClient on steroids ! Easily add one or more Rack middleware around RestClient to add functionalities such as transparent caching (Rack::Cache), transparent logging, etc.}
   s.test_files = [
     "spec/components_spec.rb",
-     "spec/spec_helper.rb"
+     "spec/spec_helper.rb",
+     "examples/beautify_html.rb",
+     "examples/caching.rb",
+     "examples/parsing.rb"
   ]
 
   if s.respond_to? :specification_version then
