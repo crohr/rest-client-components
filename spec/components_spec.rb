@@ -111,7 +111,7 @@ describe "Components for RestClient" do
         RestClient.get "http://server.ltd/resource" do |response|
           response.code.should == 200
           response.headers[:x_rack_cache].should == 'miss'
-          response.to_s.should == "body"
+          response.body.should == "body"
         end
       end
       it "should get cached" do
@@ -122,13 +122,13 @@ describe "Components for RestClient" do
         RestClient.get "http://server.ltd/resource" do |response|
           response.headers[:x_rack_cache].should == 'miss, store'
           response.headers[:age].should == "0"
-          response.to_s.should == "body"
+          response.body.should == "body"
         end
         sleep 1
         RestClient.get "http://server.ltd/resource" do |response|
           response.headers[:x_rack_cache].should == 'stale, valid, store'
           response.headers[:age].should == "1"
-          response.to_s.should == "body"
+          response.body.should == "body"
         end
       end
     end
