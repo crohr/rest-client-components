@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/../lib/restclient/components'
+require 'restclient/components'
 require 'rack/cache'
 require 'json'
 require 'logger'
