@@ -71,7 +71,7 @@ describe "Components for RestClient" do
         end
       end
       RestClient.enable RackAppThatProcessesPayload
-      stub_request(:post, "http://server.ltd/resource").with(:body => "<b>rest-client-components</b> is cool", :headers => {'Content-Type'=>'text/html', 'Accept-Encoding'=>'gzip, deflate', 'Content-Length'=>'37', 'Accept'=>'*/*; q=0.5, application/xml'}).to_return(:status => 201, :body => "ok", :headers => {'Content-Length' => 2, 'Content-Type' => "text/plain"})
+      stub_request(:post, "http://server.ltd/resource").with(:body => "<b>rest-client-components</b> is cool", :headers => {'Content-Type'=>'text/plain', 'Accept-Encoding'=>'gzip, deflate', 'Content-Length'=>'37', 'Accept'=>'*/*; q=0.5, application/xml'}).to_return(:status => 201, :body => "ok", :headers => {'Content-Length' => 2, 'Content-Type' => "text/plain"})
       RestClient.post "http://server.ltd/resource", 'rest-client is cool', :content_type => "text/plain"
     end
     

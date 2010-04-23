@@ -13,7 +13,7 @@ module RestClient
         net_http_response = RestClient::MockNetHTTPResponse.new(body, status, header)
         content = ""
         net_http_response.body.each{|line| content << line}
-        response = RestClient::Response.new(content, net_http_response, {})
+        response = RestClient::Response.create(content, net_http_response, {})
         if block = env['restclient.hash'][:block]
           block.call(response)
         # only raise error if response is not successful
