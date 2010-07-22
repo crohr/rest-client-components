@@ -90,7 +90,11 @@ module RestClient
       uri = URI.parse(@url)
       # minimal rack spec
       env = { 
-        "restclient.hash" => {:request => self, :error => nil, :block => block},
+        "restclient.hash" => {
+          :request => self, 
+          :error => nil, 
+          :block => block
+        },
         "REQUEST_METHOD" => @method.to_s.upcase,
         "SCRIPT_NAME" => "",
         "PATH_INFO" => uri.path || "/",
@@ -108,7 +112,12 @@ module RestClient
       @processed_headers.each do |key, value|
         env.merge!("HTTP_"+key.to_s.gsub("-", "_").upcase => value)
       end
-      env.delete('HTTP_CONTENT_TYPE'); env.delete('HTTP_CONTENT_LENGTH')
+      if content_type = env.delete('HTTP_CONTENT_TYPE')
+        env['CONTENT_TYPE'] = content_type
+      end
+      if content_length = env.delete('HTTP_CONTENT_LENGTH')
+        env['CONTENT_LENGTH'] = content_length
+      end
       stack = RestClient::RACK_APP
       RestClient.components.each do |(component, args)|
         if (args || []).empty?
@@ -169,10 +178,12 @@ module RestClient
     begin
       # get the original request, replace headers with those of env, and execute it
       request = env['restclient.hash'][:request]
-      additional_headers = (env.keys.select{|k| k=~/^HTTP_/}).inject({}){|accu, k|
+      env_headers = (env.keys.select{|k| k=~/^HTTP_/}).inject({}){|accu, k|
         accu[k.gsub("HTTP_", "").split("_").map{|s| s.downcase.capitalize}.join("-")] = env[k]
         accu
       }
+      env_headers['Content-Type'] = env['CONTENT_TYPE'] if env['CONTENT_TYPE']
+      env_headers['Content-Length'] = env['CONTENT_LENGTH'] if env['CONTENT_LENGTH']
       # hack, should probably avoid to call #read on rack.input..
       payload = if (env['rack.input'].size > 0)
         env['rack.input'].rewind
@@ -181,12 +192,14 @@ module RestClient
         nil
       end
       request.instance_variable_set "@payload", payload
-      headers = request.make_headers(additional_headers)
-      headers.delete('Content-Type')
-      headers['Content-Type'] = env['CONTENT_TYPE'] if env['CONTENT_TYPE']
+      headers = request.make_headers(env_headers)
       request.processed_headers.update(headers)
       response = request.original_execute
-    rescue RestClient::ExceptionWithResponse => e  
+    rescue RestClient::ExceptionWithResponse => e    
+      # re-raise the error if the response is nil (RestClient does not
+      # differentiate between a RestClient::RequestTimeout due to a 408 
+      # status code, and a RestClient::RequestTimeout due to a Timeout::Error)
+      raise e if e.response.nil?
       env['restclient.hash'][:error] = e
       response = e.response
     end

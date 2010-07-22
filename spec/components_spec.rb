@@ -60,6 +60,10 @@ describe "Components for RestClient" do
       stub_request(:get, "http://server.ltd/resource").to_raise(EOFError)
       lambda{ RestClient.get "http://server.ltd/resource" }.should raise_error(RestClient::ServerBrokeConnection)
     end
+    it "should raise timeout Exception errors" do
+      stub_request(:get, "http://server.ltd/resource").to_raise(Timeout::Error)
+      lambda{ RestClient.get "http://server.ltd/resource" }.should raise_error(RestClient::RequestTimeout)
+    end
     it "should correctly pass the payload in rack.input" do
       class RackAppThatProcessesPayload
         def initialize(app); @app = app; end
@@ -71,8 +75,13 @@ describe "Components for RestClient" do
         end
       end
       RestClient.enable RackAppThatProcessesPayload
-      stub_request(:post, "http://server.ltd/resource").with(:body => "<b>rest-client-components</b> is cool", :headers => {'Content-Type'=>'text/plain', 'Accept-Encoding'=>'gzip, deflate', 'Content-Length'=>'37', 'Accept'=>'*/*; q=0.5, application/xml'}).to_return(:status => 201, :body => "ok", :headers => {'Content-Length' => 2, 'Content-Type' => "text/plain"})
+      stub_request(:post, "http://server.ltd/resource").with(:body => "<b>rest-client-components</b> is cool", :headers => {'Content-Type'=>'text/html', 'Accept-Encoding'=>'gzip, deflate', 'Content-Length'=>'37', 'Accept'=>'*/*; q=0.5, application/xml'}).to_return(:status => 201, :body => "ok", :headers => {'Content-Length' => 2, 'Content-Type' => "text/plain"})
       RestClient.post "http://server.ltd/resource", 'rest-client is cool', :content_type => "text/plain"
+    end
+    
+    it "should correctly pass content-length and content-type headers" do
+      stub_request(:post, "http://server.ltd/resource").with(:body => "some stupid message", :headers => {'Content-Type'=>'text/plain', 'Accept-Encoding'=>'gzip, deflate', 'Content-Length'=>'19', 'Accept'=>'*/*; q=0.5, application/xml'}).to_return(:status => 201, :body => "ok", :headers => {'Content-Length' => 2, 'Content-Type' => "text/plain"})
+      RestClient.post "http://server.ltd/resource", 'some stupid message', :content_type => "text/plain", :content_length => 19
     end
     
     describe "and another component" do
@@ -124,10 +133,8 @@ describe "Components for RestClient" do
           response.headers[:age].should == "0"
           response.body.should == "body"
         end
-        sleep 1
         RestClient.get "http://server.ltd/resource" do |response|
           response.headers[:x_rack_cache].should == 'stale, valid, store'
-          response.headers[:age].should == "1"
           response.body.should == "body"
         end
       end
