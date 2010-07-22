@@ -170,7 +170,7 @@ module RestClient
       # get the original request, replace headers with those of env, and execute it
       request = env['restclient.hash'][:request]
       additional_headers = (env.keys.select{|k| k=~/^HTTP_/}).inject({}){|accu, k|
-        accu[k.gsub("HTTP_", "")] = env[k]
+        accu[k.gsub("HTTP_", "").split("_").map{|s| s.downcase.capitalize}.join("-")] = env[k]
         accu
       }
       # hack, should probably avoid to call #read on rack.input..
@@ -183,7 +183,7 @@ module RestClient
       request.instance_variable_set "@payload", payload
       headers = request.make_headers(additional_headers)
       headers.delete('Content-Type')
-      headers['Content-type'] = env['CONTENT_TYPE'] if env['CONTENT_TYPE']
+      headers['Content-Type'] = env['CONTENT_TYPE'] if env['CONTENT_TYPE']
       request.processed_headers.update(headers)
       response = request.original_execute
     rescue RestClient::ExceptionWithResponse => e  
