@@ -192,14 +192,12 @@ module RestClient
       }
       env_headers['Content-Type'] = env['CONTENT_TYPE'] if env['CONTENT_TYPE']
       env_headers['Content-Length'] = env['CONTENT_LENGTH'] if env['CONTENT_LENGTH']
-      # hack, should probably avoid to call #read on rack.input..
-      payload = if (env['rack.input'].size > 0)
-        env['rack.input'].rewind
-        Payload.generate(env['rack.input'].read)
-      else
-        nil
-      end
+
+      env['rack.input'].rewind
+      payload = env['rack.input'].read
+      payload = (payload.empty? ? nil : Payload.generate(payload))
       request.instance_variable_set "@payload", payload
+
       headers = request.make_headers(env_headers)
       request.processed_headers.update(headers)
       response = request.original_execute
