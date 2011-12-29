@@ -7,7 +7,7 @@ module RestClient
       def initialize(app)
         @app = app
       end
-      
+
       def call(env)
         status, header, body = @app.call(env)
         net_http_response = RestClient::MockNetHTTPResponse.new(body, status, header)
@@ -16,7 +16,7 @@ module RestClient
         response = RestClient::Response.create(content, net_http_response, {})
         if block = env['restclient.hash'][:block]
           block.call(response)
-        # only raise error if response is not successful
+          # only raise error if response is not successful
         elsif !(200...300).include?(response.code) && e = env['restclient.hash'][:error]
           raise e
         else
@@ -29,20 +29,25 @@ module RestClient
   class <<self
     attr_reader :components
   end
-  
+
   # Enable a Rack component. You may enable as many components as you want.
-  # e.g.
+  #
+  # Examples:
+  #
   # Transparent HTTP caching:
-  #   RestClient.enable Rack::Cache, 
+  #
+  #   RestClient.enable Rack::Cache,
   #                       :verbose     => true,
   #                       :metastore   => 'file:/var/cache/rack/meta'
   #                       :entitystore => 'file:/var/cache/rack/body'
-  # 
+  #
   # Transparent logging of HTTP requests (commonlog format):
+  #
   #   RestClient.enable Rack::CommonLogger, STDOUT
-  # 
-  # Please refer to the documentation of each rack component for the list of available options.
-  # 
+  #
+  # Please refer to the documentation of each rack component for the list of
+  # available options.
+  #
   def self.enable(component, *args)
     # remove any existing component of the same class
     disable(component)
@@ -52,47 +57,49 @@ module RestClient
       @components.unshift [component, args]
     end
   end
-  
+
   # Disable a component
+  #
   #   RestClient.disable Rack::Cache
   #   => array of remaining components
   def self.disable(component)
     @components.delete_if{|(existing_component, options)| component == existing_component}
   end
-  
-  # Returns true if the given component is enabled, false otherwise
+
+  # Returns true if the given component is enabled, false otherwise.
+  #
   #   RestClient.enable Rack::Cache
   #   RestClient.enabled?(Rack::Cache)
   #   => true
   def self.enabled?(component)
     !@components.detect{|(existing_component, options)| component == existing_component}.nil?
   end
-  
+
   def self.reset
-    # hash of the enabled components 
+    # hash of the enabled components
     @components = [[RestClient::Rack::Compatibility]]
   end
-  
+
   def self.debeautify_headers(headers = {})   # :nodoc:
     headers.inject({}) do |out, (key, value)|
-			out[key.to_s.gsub(/_/, '-').split("-").map{|w| w.capitalize}.join("-")] = value.to_s
-			out
-		end
+      out[key.to_s.gsub(/_/, '-').split("-").map{|w| w.capitalize}.join("-")] = value.to_s
+      out
+    end
   end
-  
+
   reset
-  
-  # Reopen the RestClient::Request class to add a level of indirection in order to create the stack of Rack middleware.
-  # 
-	class Request
-	  alias_method :original_execute, :execute
-	  def execute(&block)
+
+  # Reopen the RestClient::Request class to add a level of indirection in
+  # order to create the stack of Rack middleware.
+  class Request
+    alias_method :original_execute, :execute
+    def execute(&block)
       uri = URI.parse(@url)
       # minimal rack spec
-      env = { 
+      env = {
         "restclient.hash" => {
-          :request => self, 
-          :error => nil, 
+          :request => self,
+          :error => nil,
           :block => block
         },
         "REQUEST_METHOD" => @method.to_s.upcase,
@@ -136,29 +143,30 @@ module RestClient
       response
     end
   end
-	
-	module Payload
-	  class Base
-	    def rewind(*args)
-	      @stream.rewind(*args)
+
+  module Payload
+    class Base
+      def rewind(*args)
+        @stream.rewind(*args)
       end
-      
+
       def gets(*args)
         @stream.gets(*args)
       end
-      
+
       def each(&block)
         @stream.each(&block)
       end
     end
   end
-  
-  # A class that mocks the behaviour of a Net::HTTPResponse class.
-  # It is required since RestClient::Response must be initialized with a class that responds to :code and :to_hash.
+
+  # A class that mocks the behaviour of a Net::HTTPResponse class. It is
+  # required since RestClient::Response must be initialized with a class that
+  # responds to :code and :to_hash.
   class MockNetHTTPResponse
     attr_reader :body, :header, :status
     alias_method :code, :status
-    
+
     def initialize(body, status, header)
       @body = body
       @status = status
@@ -171,9 +179,9 @@ module RestClient
         out[key] = [value]
         out
       }
-    end    
+    end
   end
-  
+
   RACK_APP = Proc.new { |env|
     begin
       # get the original request, replace headers with those of env, and execute it
@@ -195,10 +203,10 @@ module RestClient
       headers = request.make_headers(env_headers)
       request.processed_headers.update(headers)
       response = request.original_execute
-    rescue RestClient::ExceptionWithResponse => e    
+    rescue RestClient::ExceptionWithResponse => e
       # re-raise the error if the response is nil (RestClient does not
-      # differentiate between a RestClient::RequestTimeout due to a 408 
-      # status code, and a RestClient::RequestTimeout due to a Timeout::Error)
+      # differentiate between a RestClient::RequestTimeout due to a 408 status
+      # code, and a RestClient::RequestTimeout due to a Timeout::Error)
       raise e if e.response.nil?
       env['restclient.hash'][:error] = e
       response = e.response
@@ -207,7 +215,8 @@ module RestClient
     response.headers.delete(:status)
     header = RestClient.debeautify_headers( response.headers )
     body = response.to_s
-    # return the real content-length since RestClient does not do it when decoding gzip responses
+    # return the real content-length since RestClient does not do it when
+    # decoding gzip responses
     header['Content-Length'] = body.length.to_s if header.has_key?('Content-Length')
     [response.code, header, [body]]
   }
