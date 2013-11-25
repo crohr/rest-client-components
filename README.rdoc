@@ -43,7 +43,7 @@ Example with Rack::Cache, and Rack::CommonLogger
   
   RestClient.enable Rack::CommonLogger
   # Enable the cache Rack middleware, and store both meta and entity data in files:
-  # See http://tomayko.com/src/rack-cache/configuration for the list of available options
+  # See http://rtomayko.github.io/rack-cache/configuration for the list of available options
   RestClient.enable Rack::Cache, 
                     :metastore => 'file:/tmp/cache/meta', 
                     :entitystore => 'file:/tmp/cache/body'
