@@ -34,6 +34,7 @@ See the examples folder for more details.
 = Installation
 
   gem install rest-client-components
+  gem install rack-cache # if you want to use Rack::Cache
   
 = Usage
 Example with Rack::Cache, and Rack::CommonLogger
