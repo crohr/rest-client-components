@@ -13,7 +13,7 @@ describe "Components for RestClient" do
   end
   it "should enable components" do
     RestClient.enable Rack::Cache, :key => "value"
-    RestClient.enabled?(Rack::Cache).should be_true
+    RestClient.enabled?(Rack::Cache).should be_truthy
     RestClient.components.first.should == [Rack::Cache, [{:key => "value"}]]
     RestClient.enable Rack::CommonLogger
     RestClient.components.length.should == 3
@@ -44,7 +44,7 @@ describe "Components for RestClient" do
       stub_request(:get, "http://server.ltd/resource").to_return(:status => 200, :body => "body", :headers => {'Content-Length' => 4, 'Content-Type' => 'text/plain'})
       lambda{ RestClient.get "http://server.ltd/resource" do |response|
         raise Exception.new(response.code)
-      end}.should raise_error(Exception, 200)
+      end}.should raise_error(Exception, "200")
     end
     it "should correctly use the response.return! helper" do
       stub_request(:get, "http://server.ltd/resource").to_return(:status => 404, :body => "body", :headers => {'Content-Length' => 4, 'Content-Type' => 'text/plain'})      
@@ -150,7 +150,7 @@ describe "Components for RestClient" do
       stub_request(:get, "http://server.ltd/resource").to_return(:status => 200, :body => "body", :headers => {'Content-Type' => 'text/plain', 'Content-Length' => 4})
       lambda{RestClient.get "http://server.ltd/resource" do |response|
         raise Exception.new(response.class)
-      end}.should raise_error(Exception, Array)
+      end}.should raise_error(Exception, "Array")
     end
     it "should return response as an array of status, headers, body if response block is used" do
       stub_request(:get, "http://server.ltd/resource").to_return(:status => 200, :body => "body", :headers => {'Content-Type' => 'text/plain', 'Content-Length' => 4})

@@ -13,7 +13,10 @@ module RestClient
         net_http_response = RestClient::MockNetHTTPResponse.new(body, status, header)
         content = ""
         net_http_response.body.each{|line| content << line}
-        response = RestClient::Response.create(content, net_http_response, {})
+        response = case RestClient::Response.method(:create).arity
+        when 4 then RestClient::Response.create(content, net_http_response, {}, self)
+        else        RestClient::Response.create(content, net_http_response, {})
+        end
         if block = env['restclient.hash'][:block]
           block.call(response)
           # only raise error if response is not successful
@@ -113,7 +116,7 @@ module RestClient
         "rack.multithread" => true,
         "rack.multiprocess" => true,
         "rack.url_scheme" => uri.scheme,
-        "rack.input" => payload || StringIO.new,
+        "rack.input" => payload || StringIO.new().set_encoding("ASCII-8BIT"),
         "rack.errors" => $stderr
       }
       @processed_headers.each do |key, value|

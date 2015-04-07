@@ -1,11 +1,9 @@
 require 'rubygems'
-require 'spec'
+require 'rspec'
 require 'webmock/rspec'
 
-include WebMock
 $LOAD_PATH.unshift(File.dirname(__FILE__))
 
-
-Spec::Runner.configure do |config|
+RSpec.configure do |config|
   
 end
