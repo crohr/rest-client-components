@@ -13,9 +13,10 @@ module RestClient
         net_http_response = RestClient::MockNetHTTPResponse.new(body, status, header)
         content = ""
         net_http_response.body.each{|line| content << line}
+        request = env['restclient.hash'][:request]
         response = case RestClient::Response.method(:create).arity
-        when 4 then RestClient::Response.create(content, net_http_response, {}, self)
-        else        RestClient::Response.create(content, net_http_response, {})
+        when 4 then RestClient::Response.create(content, net_http_response, request, self)
+        else        RestClient::Response.create(content, net_http_response, request)
         end
         if block = env['restclient.hash'][:block]
           block.call(response)
