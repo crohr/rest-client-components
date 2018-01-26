@@ -131,7 +131,8 @@ describe "Components for RestClient" do
             to_return(:status => 304, :headers => {'Content-Type' => 'text/plain', 'Cache-Control' => 'public', 'Content-Length' => 0, 'Date' => now.httpdate, 'Last-Modified' => last_modified.httpdate})
         RestClient.get "http://server.ltd/resource" do |response|
           response.headers[:x_rack_cache].should == 'miss, store'
-          response.headers[:age].should == "0"
+          expect(response.headers[:age]).to_not be_nil
+          expect(response.headers[:age].to_i > 0)
           response.body.should == "body"
         end
         RestClient.get "http://server.ltd/resource" do |response|
