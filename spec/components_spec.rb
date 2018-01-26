@@ -75,12 +75,12 @@ describe "Components for RestClient" do
         end
       end
       RestClient.enable RackAppThatProcessesPayload
-      stub_request(:post, "http://server.ltd/resource").with(:body => "<b>rest-client-components</b> is cool", :headers => {'Content-Type'=>'text/html', 'Accept-Encoding'=>'gzip, deflate', 'Content-Length'=>'37', 'Accept'=>'*/*; q=0.5, application/xml'}).to_return(:status => 201, :body => "ok", :headers => {'Content-Length' => 2, 'Content-Type' => "text/plain"})
+      stub_request(:post, "http://server.ltd/resource").with(:body => "<b>rest-client-components</b> is cool", :headers => {'Content-Type'=>'text/html', 'Accept-Encoding'=>'gzip, deflate', 'Content-Length'=>'37', 'Accept'=>'*/*'}).to_return(:status => 201, :body => "ok", :headers => {'Content-Length' => 2, 'Content-Type' => "text/plain"})
       RestClient.post "http://server.ltd/resource", 'rest-client is cool', :content_type => "text/plain"
     end
     
     it "should correctly pass content-length and content-type headers" do
-      stub_request(:post, "http://server.ltd/resource").with(:body => "some stupid message", :headers => {'Content-Type'=>'text/plain', 'Accept-Encoding'=>'gzip, deflate', 'Content-Length'=>'19', 'Accept'=>'*/*; q=0.5, application/xml'}).to_return(:status => 201, :body => "ok", :headers => {'Content-Length' => 2, 'Content-Type' => "text/plain"})
+      stub_request(:post, "http://server.ltd/resource").with(:body => "some stupid message", :headers => {'Content-Type'=>'text/plain', 'Accept-Encoding'=>'gzip, deflate', 'Content-Length'=>'19', 'Accept'=>'*/*'}).to_return(:status => 201, :body => "ok", :headers => {'Content-Length' => 2, 'Content-Type' => "text/plain"})
       RestClient.post "http://server.ltd/resource", 'some stupid message', :content_type => "text/plain", :content_length => 19
     end
     
@@ -103,9 +103,10 @@ describe "Components for RestClient" do
     
     describe "with Rack::Cache enabled" do
       before(:each) do
+        random = SecureRandom.uuid
         RestClient.enable Rack::Cache,
-          :metastore   => 'heap:/1/',
-          :entitystore => 'heap:/1/'
+          :metastore   => "heap:/#{random}/",
+          :entitystore => "heap:/#{random}/"
       end
       it "should raise ExceptionWithResponse errors" do
         stub_request(:get, "http://server.ltd/resource").to_return(:status => 404, :body => "body", :headers => {'Content-Length' => 4, 'Content-Type' => 'text/plain'})
@@ -177,9 +178,10 @@ describe "Components for RestClient" do
     
     describe "with Rack::Cache" do
       before do
+        random = SecureRandom.uuid
         RestClient.enable Rack::Cache,
-          :metastore   => 'heap:/2/',
-          :entitystore => 'heap:/2/'
+          :metastore   => "heap:/#{random}/",
+          :entitystore => "heap:/#{random}/"
       end
       it "should not raise ExceptionWithResponse errors" do
         stub_request(:get, "http://server.ltd/resource").to_return(:status => 404, :body => "body", :headers => {'Content-Length' => 4, 'Content-Type' => 'text/plain'})

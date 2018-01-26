@@ -2,4 +2,7 @@ source 'https://rubygems.org'
 
 gemspec
 
-gem 'rack-cache'
+group :test, :development do
+  gem 'rake'
+  gem 'rack-cache'
+end
