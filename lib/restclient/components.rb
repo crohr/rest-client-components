@@ -213,14 +213,18 @@ module RestClient
       env['restclient.hash'][:error] = e
       response = e.response
     end
-    # to satisfy Rack::Lint
-    response.headers.delete(:status)
-    header = RestClient.debeautify_headers( response.headers )
-    body = response.to_s
-    # return the real content-length since RestClient does not do it when
-    # decoding gzip responses
-    header['Content-Length'] = body.length.to_s if header.has_key?('Content-Length')
-    [response.code, header, [body]]
+    if response.is_a?(RestClient::Response)
+      # to satisfy Rack::Lint
+      response.headers.delete(:status)
+      header = RestClient.debeautify_headers( response.headers )
+      body = response.to_s
+      # return the real content-length since RestClient does not do it when
+      # decoding gzip responses
+      header['Content-Length'] = body.length.to_s if header.has_key?('Content-Length')
+      [response.code, header, [body]]
+    else
+      response
+    end
   }
 
 end

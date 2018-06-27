@@ -84,6 +84,16 @@ describe "Components for RestClient" do
       RestClient.post "http://server.ltd/resource", 'some stupid message', :content_type => "text/plain", :content_length => 19
     end
     
+    it "should follow redirects" do
+      #see https://github.com/crohr/rest-client-components/issues/17
+      stub_request(:get, "http://server.ltd/resource").to_return(:status => 302, :body => "", :headers => {'Location' => "http://server.ltd/resource/"})
+      stub_request(:get, "http://server.ltd/resource/").to_return(:status => 200, :body => "body", :headers => {'Content-Type' => 'text/plain', 'Content-Length' => 4})
+      response = RestClient.get "http://server.ltd/resource"
+      response.code.should == 200
+      response.headers.should == {:content_type=>"text/plain", :content_length =>"4"}
+      response.body.should == "body"
+    end
+
     describe "and another component" do
       before do
         class AnotherRackMiddleware
@@ -156,6 +166,17 @@ describe "Components for RestClient" do
     end
     it "should return response as an array of status, headers, body if response block is used" do
       stub_request(:get, "http://server.ltd/resource").to_return(:status => 200, :body => "body", :headers => {'Content-Type' => 'text/plain', 'Content-Length' => 4})
+      status, headers, body = RestClient.get "http://server.ltd/resource"
+      status.should == 200
+      headers.should == {"Content-Type"=>"text/plain", "Content-Length"=>"4"}
+      content = ""
+      body.each{|block| content << block}
+      content.should == "body"
+    end
+    it "should follow redirects" do
+      #see https://github.com/crohr/rest-client-components/issues/17
+      stub_request(:get, "http://server.ltd/resource").to_return(:status => 302, :body => "", :headers => {'Location' => "http://server.ltd/resource/"})
+      stub_request(:get, "http://server.ltd/resource/").to_return(:status => 200, :body => "body", :headers => {'Content-Type' => 'text/plain', 'Content-Length' => 4})
       status, headers, body = RestClient.get "http://server.ltd/resource"
       status.should == 200
       headers.should == {"Content-Type"=>"text/plain", "Content-Length"=>"4"}
